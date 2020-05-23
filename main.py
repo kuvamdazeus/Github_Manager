@@ -36,7 +36,7 @@ def delete_repo_by_name(user, name):
 def border(number=None):
     if number == None:
         print("="*50) 
-    else: 
+    else:
         print("="*number)
 
 def start_github_vault():
@@ -44,15 +44,21 @@ def start_github_vault():
     password = getpass()
     border()
     global user
-    user, repos = login(username, password)
+    try:
+        user, repos = login(username, password)
+    except Exception as error:
+        print(error)
+        return start_github_vault()
     while True:
         command = input("Enter command: ").strip()
         # patterns go here
         pattern_create = r"create \[([a-zA-Z0-9\s_\.,\$\-/]+)\]" # create [Test_Project]
         pattern_delete = r"delete \[([a-zA-Z0-9\s_\.,\$\-/]+)\]" # delete [Test_Project]
+        pattern_get = r"get \[([a-zA-Z0-9\s_\.,\$\-/]+)\]" # get repo name
         # patterns till here
         repo_creation = re.search(pattern_create, command)
         repo_deletion = re.search(pattern_delete, command)
+        repo_getter = re.search(pattern_get, command)
         if repo_creation != None:
             repo_name = repo_creation.group(1).strip()
             create_repo_by_name(user, repo_name)
@@ -60,6 +66,14 @@ def start_github_vault():
         elif repo_deletion != None:
             repo_name = repo_deletion.group(1).strip()
             delete_repo_by_name(user, repo_name)
+        
+        elif repo_getter != None:
+            try:
+                repo = user.get_repo(repo_getter.group(1).strip())
+                print("Repo present as: ", end="")
+                print(repo.full_name)
+            except Exception as error:
+                print(error)
 
         elif "exit" in command:
             print("Exiting...")
@@ -71,10 +85,20 @@ def start_github_vault():
             for repo in repos:
                 print(repo.full_name)
             print()
+        
+        elif "log" in command and "out" in command:
+            return start_github_vault()
 
         else:
             print("Command not recognized")
         border()
+
+def get_repo_by_name(user, repo_name):
+    try:
+        repo = user.get_repo(repo_name)
+        print(repo.full_name)
+    except Exception as error:
+        print(error)
 
 def main():
     try:
@@ -84,4 +108,7 @@ def main():
     while True: start_github_vault()
     
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nProgram ended !")
