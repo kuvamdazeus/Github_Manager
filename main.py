@@ -66,6 +66,7 @@ def start_github_vault():
             sys.exit(0)
         
         elif "show" in command:
+            repos = user.get_repos()
             print()
             for repo in repos:
                 print(repo.full_name)
